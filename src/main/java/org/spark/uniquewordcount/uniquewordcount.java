@@ -7,6 +7,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SparkSession;
 import scala.Tuple2;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -18,15 +19,17 @@ public class uniquewordcount {
                 .getOrCreate();
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
         String path = "/home/cbnits-51/Desktop/sayan/test.txt";
-        JavaRDD<String> uniquewordcount = sc.textFile(path).map(line -> line.replaceAll("[^a-zA-z\\s]", "").toLowerCase())
-                .flatMap(line -> List.of(line.split("\\s")).iterator())
-                .filter(word -> (word != null) && word.trim().length() > 0);
+//        JavaRDD<String> uniquewordcount = sc.textFile(path).map(line -> line.replaceAll("[^a-zA-z\\s]", "").toLowerCase())
+//                .flatMap(line -> List.of(line.split(" ")).iterator())
+//                .filter(word -> (word != null) && word.trim().length() > 0);
+        JavaRDD<String> lines = sc.textFile(path);
+        JavaRDD<String> uniquewordcount = lines.flatMap(line -> Arrays.asList(line.replaceAll("[^a-zA-Z\\s]", "").toLowerCase().split(" ")).iterator());
 //        uniquewordcount.collect().forEach(System.out::println);
         JavaPairRDD<String, Long> pairrdd = uniquewordcount.mapToPair(line -> new Tuple2<>(line, 1L));
 
         JavaPairRDD<String, Long> unique = pairrdd.reduceByKey(Long::sum);
         AtomicInteger count = new AtomicInteger(0);
-        unique.take(8).forEach(System.out::println);
+        //unique.take(8).forEach(System.out::println);
         //Here unique.foreach does not works because spark is lazy evaluation.
         unique.collect().forEach(line -> {
             if (line._2 == 1) {
@@ -35,10 +38,10 @@ public class uniquewordcount {
         });
         System.out.println("Unique word " + count.get());
         System.out.println("Total word " + uniquewordcount.count());
-        uniquewordcount.take(50).forEach(System.out::println);
+       // uniquewordcount.take(50).forEach(System.out::println);
         JavaRDD<String> distinct = uniquewordcount.distinct();
         System.out.println("Distinct word " + distinct.count());
-        distinct.take(50).forEach(System.out::println);
+       // distinct.take(50).forEach(System.out::println);
 
     }
 }
