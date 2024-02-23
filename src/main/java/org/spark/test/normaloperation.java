@@ -22,7 +22,7 @@ public class normaloperation {
         df.show(5);
         //It checks the value of -c0 column and eleminate the entire row.
         Dataset<Row> filter = df.filter(functions.col("_c0").notEqual("Id"));
-        System.out.println("After deleteing Id, Sepallength ....");
+        System.out.println("After deleteing Id, Sepallength ");
         filter.show(5);
         StringIndexerModel stringindexmodel=new StringIndexer()
                 .setInputCol("_c5")

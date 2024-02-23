@@ -10,8 +10,7 @@ import org.apache.spark.ml.feature.VectorAssembler;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.functions;
-import scala.Tuple2;
+
 
 import static org.apache.spark.sql.functions.col;
 
@@ -35,12 +34,12 @@ public class prediction {
         // Encode the "_c5" column to numerical values
         StringIndexerModel indexer = new StringIndexer()
                 .setInputCol("_c5")
-                .setOutputCol("label")
+                .setOutputCol("target")
                 .fit(filter);
-        System.out.println("Encode a column");
+        System.out.println("Encode c0 column");
 
         Dataset<Row> encodeDf = indexer.transform(filter);
-        encodeDf.show(10);
+        encodeDf.show(5);
 
         // Convert all columns to DoubleType
         for (String columnName : encodeDf.columns()) {
@@ -55,13 +54,13 @@ public class prediction {
         Dataset<Row> assembledDf = assembler.transform(encodeDf);
 
         // Split the data into training and testing sets (80% train, 20% test)
-        Dataset<Row>[] splits = assembledDf.randomSplit(new double[]{0.8, 0.2});
+        Dataset<Row>[] splits = assembledDf.randomSplit(new double[]{0.7, 0.3});
         Dataset<Row> trainingData = splits[0];
         Dataset<Row> testData = splits[1];
 
         // Create a Logistic Regression model
         LogisticRegression lr = new LogisticRegression()
-                .setLabelCol("label")
+                .setLabelCol("target")
                 .setFeaturesCol("features");
 
         // Train the model
@@ -72,7 +71,7 @@ public class prediction {
 
         // Evaluate the model
         MulticlassClassificationEvaluator evaluator = new MulticlassClassificationEvaluator()
-                .setLabelCol("label")
+                .setLabelCol("target")
                 .setPredictionCol("prediction")
                 .setMetricName("accuracy");
 
